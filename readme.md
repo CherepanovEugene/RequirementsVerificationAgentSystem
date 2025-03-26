@@ -1,0 +1,10 @@
+pip install langchain 
+pip install langchain-community 
+pip install langchain-gigachat
+pip install gigachat
+pip install langgraph
+pip install python-dotenv
+pip install pymupdf
+pip install fpdf2
+pip install faiss-cpu
+pip install pydantic
