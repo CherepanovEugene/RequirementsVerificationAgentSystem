@@ -96,26 +96,109 @@ def parser_agent(state: GraphState):
     parser_logger.info("Завершение работы агента парсинга")
     return state
 
-# Агент-Анализатор: проверяет каждую часть документа через LLM
+# Агент-Анализатор: проверяет каждую часть документа через LLM и ищет релевантные вопросу фрагменты
+# def analysis_agent(state: GraphState):
+#     analysis_logger.info("Начало работы агента анализа")
+#     state.analysis_result = {question: [] for question in state.questions}
+#
+#     for idx, doc in enumerate(state.docs):
+#         analysis_logger.info(f"Анализируется часть документа №{idx + 1}")
+#         for question in state.questions:
+#             prompt = (f"В данной части документа может быть ответ на вопрос: \"{question}\"? "
+#                       f"Ответь одним коротким предложением. Часть документа: {doc.page_content[:200]}...")
+#             response = llm.invoke(prompt).content
+#             analysis_logger.info(f"Ответ LLM: {response}")
+#             if "да" in response.lower():
+#                 state.analysis_result[question].append(doc.page_content)
+#                 analysis_logger.info(f"Фрагмент добавлен для вопроса: {question}")
+#
+#     analysis_logger.info("Завершение работы агента анализа")
+#     return state
+
+
+# Агент-Анализатор: проверяет каждую часть документа через LLM и ищет ответы на вопросы в каждом фрагменте
 def analysis_agent(state: GraphState):
     analysis_logger.info("Начало работы агента анализа")
     state.analysis_result = {question: [] for question in state.questions}
 
     for idx, doc in enumerate(state.docs):
-        analysis_logger.info(f"Анализируется часть документа №{idx + 1}")
+        analysis_logger.info(f"Анализируется фрагмент №{idx + 1}")
         for question in state.questions:
-            prompt = (f"В данной части документа может быть ответ на вопрос: \"{question}\"? "
-                      f"Ответь одним коротким предложением. Часть документа: {doc.page_content[:200]}...")
-            response = llm.invoke(prompt).content
-            analysis_logger.info(f"Ответ LLM: {response}")
-            if "да" in response.lower():
-                state.analysis_result[question].append(doc.page_content)
-                analysis_logger.info(f"Фрагмент добавлен для вопроса: {question}")
+            prompt = (
+                f"Используя следующий фрагмент документа, ответь кратко и точно на вопрос.\n\n"
+                f"Вопрос: {question}\n\n"
+                f"Фрагмент документа:\n{doc.page_content}\n\n"
+                f"Если информации недостаточно, ответь: 'Ответ не найден'."
+            )
+
+            response = llm.invoke(prompt).content.strip()
+            analysis_logger.info(f"Вопрос: {question} | Ответ LLM: {response}")
+
+            if response.lower() != "ответ не найден":
+                state.analysis_result[question].append({
+                    "answer": response,
+                    "fragment": doc.page_content
+                })
 
     analysis_logger.info("Завершение работы агента анализа")
     return state
 
-# Агент-Отчёт: формирует отчёт в PDF
+
+# Агент-Отчёт: формирует отчёт в PDF: вопросы и фрагменты
+# def report_agent(state: GraphState):
+#     report_logger.info("Начало работы агента отчёта")
+#     pdf = FPDF()
+#     pdf.add_page()
+#
+#     # Подключение обычного и жирного шрифтов
+#     pdf.add_font("DejaVu", "", "fonts/DejaVuSans.ttf")
+#     pdf.add_font("DejaVu", "B", "fonts/DejaVuSans-Bold.ttf")
+#
+#     # Титульный заголовок отчёта
+#     pdf.set_font("DejaVu", size=16)
+#     pdf.set_text_color(0, 102, 204)  # Синий цвет
+#     pdf.cell(0, 12, "Отчёт по анализу документа", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
+#     pdf.ln(8)
+#
+#     # Перебор вопросов и фрагментов
+#     for question, fragments in state.analysis_result.items():
+#         # Запись вопроса жирным шрифтом
+#         pdf.set_font("DejaVu", style='B', size=13)
+#         pdf.set_text_color(0, 0, 0)
+#         pdf.multi_cell(0, 10, text=f"Вопрос: {question}", align='L')
+#         pdf.ln(2)
+#
+#         # Запись фрагментов ответа
+#         if fragments:
+#             for idx, fragment in enumerate(fragments, start=1):
+#                 cleaned_fragment = fragment.replace('\n', ' ').strip()
+#                 pdf.set_font("DejaVu", size=12)
+#                 pdf.set_text_color(40, 40, 40)
+#                 pdf.multi_cell(0, 8, text=f"{idx}. {cleaned_fragment}", align='L')
+#                 pdf.ln(3)
+#         else:
+#             pdf.set_font("DejaVu", style='I', size=12)
+#             pdf.set_text_color(255, 0, 0)
+#             pdf.cell(0, 8, text="Ответ не найден.", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='L')
+#             pdf.ln(3)
+#
+#         pdf.ln(5)
+#
+#     # Колонтитул с номером страницы
+#     pdf.set_y(-15)
+#     pdf.set_font("DejaVu", size=10)
+#     pdf.set_text_color(100, 100, 100)
+#     pdf.cell(0, 10, f'Страница {pdf.page_no()}', new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
+#
+#     # Сохранение отчёта
+#     output_path = "analysis_report.pdf"
+#     pdf.output(output_path)
+#
+#     report_logger.info(f"Агент отчёта завершил работу. Отчёт сохранён в {output_path}")
+#     print(f"Отчёт сохранён в {output_path}")
+#     return state
+
+# Агент-Отчёт: формирует отчёт в PDF: вопросы, ответы и фрагменты
 def report_agent(state: GraphState):
     report_logger.info("Начало работы агента отчёта")
     pdf = FPDF()
@@ -125,28 +208,35 @@ def report_agent(state: GraphState):
     pdf.add_font("DejaVu", "", "fonts/DejaVuSans.ttf")
     pdf.add_font("DejaVu", "B", "fonts/DejaVuSans-Bold.ttf")
 
-    # Титульный заголовок отчёта
+    # Основной заголовок отчёта
     pdf.set_font("DejaVu", size=16)
-    pdf.set_text_color(0, 102, 204)  # Синий цвет
+    pdf.set_text_color(0, 102, 204)
     pdf.cell(0, 12, "Отчёт по анализу документа", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
     pdf.ln(8)
 
-    # Перебор вопросов и фрагментов
-    for question, fragments in state.analysis_result.items():
-        # Запись вопроса жирным шрифтом
+    # Перебор вопросов и ответов
+    for question, items in state.analysis_result.items():
         pdf.set_font("DejaVu", style='B', size=13)
         pdf.set_text_color(0, 0, 0)
         pdf.multi_cell(0, 10, text=f"Вопрос: {question}", align='L')
         pdf.ln(2)
 
-        # Запись фрагментов ответа
-        if fragments:
-            for idx, fragment in enumerate(fragments, start=1):
-                cleaned_fragment = fragment.replace('\n', ' ').strip()
-                pdf.set_font("DejaVu", size=12)
+        if items:
+            for idx, item in enumerate(items, start=1):
+                answer = item["answer"]
+                fragment = item["fragment"].replace('\n', ' ').strip()
+
+                # Ответ выделяем зелёным
+                pdf.set_font("DejaVu", style='B', size=12)
+                pdf.set_text_color(0, 128, 0)
+                pdf.multi_cell(0, 8, text=f"Ответ: {answer}", align='L')
+                pdf.ln(1)
+
+                # Исходный фрагмент документа серым цветом
+                pdf.set_font("DejaVu", size=11)
                 pdf.set_text_color(40, 40, 40)
-                pdf.multi_cell(0, 8, text=f"{idx}. {cleaned_fragment}", align='L')
-                pdf.ln(3)
+                pdf.multi_cell(0, 8, text=f"Фрагмент: {fragment}", align='L')
+                pdf.ln(4)
         else:
             pdf.set_font("DejaVu", style='I', size=12)
             pdf.set_text_color(255, 0, 0)
@@ -195,7 +285,7 @@ def communicate(file_name, questions):
 if __name__ == "__main__":
     file_name = "Регламент_управления_уязвимостями.pdf"
     questions = [
-        "Какой порядок утверждения документа?",
+        "Из каких этапов состоит процесс управления уязвимостями?",
         "Как проводится аудит безопасности?",
         "Каков срок действия документа?"
     ]
