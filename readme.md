@@ -34,15 +34,15 @@
 ---
 
 ## 📂 Структура проекта
-RequirementsVerificationAgentSystem/
-├── docs/                          # PDF-документы для анализа   
-├── fonts/                         # Шрифты (DejaVu)   
-│   ├── DejaVuSans.ttf   
-│   └── DejaVuSans-Bold.ttf   
-├── logs/                          # Логи работы агентов   
-├── .env                           # API-ключи и переменные окружения   
-├── DocAnalysisAgents.py           # Основной код агентов   
-└── analysis_report.pdf            # Генерируемый PDF-отчёт   
+RequirementsVerificationAgentSystem/   
+docs/                          # PDF-документы для анализа   
+fonts/                         # Шрифты (DejaVu)   
+   DejaVuSans.ttf   
+   DejaVuSans-Bold.ttf   
+logs/                          # Логи работы агентов   
+.env                           # API-ключи и переменные окружения   
+DocAnalysisAgents.py           # Основной код агентов   
+analysis_report.pdf            # Генерируемый PDF-отчёт   
 
 ---
 
