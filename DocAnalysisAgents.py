@@ -7,19 +7,26 @@ import os
 import re
 import json
 import logging
+import zipfile
+import re
+import time
+import random
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Optional, Tuple
 
 from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
 # Тексты и документы
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
 
-# LLM и эмбеддинги (GigaChat)
+# LLM и эмбеддинги (GigaChat и openAI)
 from langchain_gigachat import GigaChat, GigaChatEmbeddings
 from langchain_community.vectorstores import FAISS
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings  # Для работы с LLM и эмбеддингами OpenAI
 
 # LangGraph
 from langgraph.graph import StateGraph, END
@@ -41,11 +48,7 @@ except Exception:
 # PDF-отчёты
 from fpdf import FPDF, XPos, YPos
 
-import zipfile
-import re
-import time
-import random
-import threading
+
 
 # ----------------------------
 # Конфиг и логирование
@@ -73,6 +76,13 @@ comm_logger = setup_logger("communication_agent")
 # ----------------------------
 # LLM и эмбеддинги
 # ----------------------------
+# load_dotenv()  # Загружаем переменные окружения из .env файла
+# openai_api_key = os.getenv("OPENAI_API_KEY")  # Получаем API-ключ OpenAI
+
+# --- Инициализация LLM ---
+# llm = ChatOpenAI(model="gpt-4", temperature=0.0, openai_api_key=openai_api_key)  # Настраиваем GPT-4
+# embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+
 GIGACHAT_API_KEY = os.getenv("GIGACHAT_API_KEY")
 llm = GigaChat(
     credentials=GIGACHAT_API_KEY,
@@ -708,15 +718,7 @@ if __name__ == "__main__":
     # можно передать путь к папке с файлами:
     inputs = "docs"  # либо ["docs/a.pdf", "docs/b.docx", ...]
     questions = [
-        "Артефакт по описанию технической архитектуры выполнен аккуратно?",
-        "Артефакт по описанию технической архитектуры имеет отметки о согласовании с заказчиками и/или смежными подразделениями?",
-        "Артефакт по описанию технической архитектуры имеет историю изменений?",
-        "Процесс формирования артефакта по описанию технической архитектуры идентифицирован?",
-        "Процесс формирования артефакта по описанию технической архитектуры исполняется регулярно по событию?",
-        "Записи в истории изменений артефакта технической архитектуры трассируются  на вехи/проекты в компании",
-        "Есть ли действующие ВНД / ОРД по формализации процесса по описанию технической архитектуры?",
-        "На роли в процессе описания технической архитектуры определены соответствующие сотрудники?",
-        "Назначения сотрудников на роли процесса закреплены в соответствующих ВНД/ОРД?",
-        "Для процесса по описанию технической архитектуры установлены показатели RPI??"
+        "Участвуют ли представители кибер-безопасности в согласовании корпоративной архитектуры?",
+
     ]
     communicate(inputs, questions)

@@ -1,0 +1,11 @@
+# .env и любые вариации (но оставим шаблон)
+.env
+.env.*
+!.env.example
+
+# Отчёты PDF в корне
+/analysis_report.pdf
+/report*.pdf
+
+# оставить пустую папку под контроль Git:
+!docs/.gitkeep
